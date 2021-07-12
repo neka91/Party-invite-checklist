@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <title>JSON and AJAX</title>
+    <meta charset="UTF-8">
+    <style>
+        .toggle {
+            padding: 10px;
+            font-size: 1.3em;
+            background-color: aliceblue;
+            margin: 10px;
+        }
+
+        .active {
+            background-color: aquamarine;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Party invite checklist</h1>
+    Guest Name:
+    <input type="text" id="guestName" value="Write a name">
+    + <input type="number" id="guestNum" value="0">
+    <input type="button" value="Add">
+    <div id="output"></div>
+
+    <script>
+        let output = document.getElementById('output');
+        let party = [];
+
+        window.onload = initiate;
+
+        let addGuest = document.querySelector('input[type="button"]');
+        addGuest.addEventListener('click', function () {
+            let guestName = document.getElementById('guestName');
+            let guestNum = document.getElementById('guestNum');
+            message('√ ', guestName.value + ' + ' + guestNum.value, party.length, 'active');
+            party.push({
+                name: guestName.value,
+                guests: Number(guestNum.value),
+                status: false
+            })
+            guestName.value = 'Write a name';
+            guestNum.value = 0;
+        })
+        output.addEventListener('click', function (e) {
+            let element = e.target;
+            let elementData = element.dataset;
+            element.classList.toggle('active');
+            element.children[0].innerHTML = element.children[0].innerHTML == '√ ' ? '✘ ' : '√ ';
+            party[elementData.id].status = party[elementData.id].status ? false : true;
+        })
+
+        function initiate() {
+            loadJSON(function (response) {
+                party = JSON.parse(response);
+                buildList();
+            }, 'http://myjson.dit.upm.es/api/bins/1bfn');
+        }
+
+        function buildList() {
+            for (let i = 0; i < party.length; i++) {
+                let person = party[i].name + ' + ' + party[i].guests;
+                if (party[i].status) {
+                    message('√ ', person, i, 'active');
+                } else {
+                    message('✘ ', person, i, '');
+                }
+            }
+        }
+
+        function message(m, person, id, c) {
+            output.innerHTML += '<div class="toggle ' + c + '" data-person="' + person + '" data-id="' + id + '"><span>' + m + '</span>' + person + '</div>';
+        }
+
+        function loadJSON(callback, url) {
+            let xHR = new XMLHttpRequest;
+            xHR.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    callback(this.responseText);
+                } else {
+                    return false;
+                }
+            }
+            xHR.open('GET', url, true);
+            xHR.send();
+        }
+    </script>
+</body>
+
+</html>
